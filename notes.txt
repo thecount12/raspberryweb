@@ -1,0 +1,29 @@
+List of urls, notes  and functions
+
+-----------------------------
+raspberry.py
+
+contains everything
+
+-----------------------------
+clean.sh 
+
+script to remove development threads and cleanup before sumission to github
+
+-----------------------------
+README.md
+
+Contains tutorial, installation, tips for usage
+
+-----------------------------
+
+Things to do:
+
+1. URL arg function 
+2. forms function
+3. database function
+4. improve template features
+5. /static/ development for media (css, javascript)
+   a. test inline first
+ 
+
