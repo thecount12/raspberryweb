@@ -87,9 +87,28 @@ mytemp2.html
 	def webinput(self,key):
 		data=parse_qs(self.environ['QUERY_STRING'])
 		item=data.get(key,[''])[0]  # (key,[]) return list same key	
-		return item	
+		return escape(item)	
+	def webpost(self):
+		try:
+			rbodysize=int(self.environ.get('CONTENT_LENGTH',0))
+		except (ValueError):
+			rbodysize=0
+		request_body=self.environ['wsgi.input'].read(rbodysize)
+		d=parse_qs(request_body)
+		return d 
+	def webformat(self,data,key):
+		item=data.get(key,[''])[0]
+		return escape(item)
 
 class application(Raspberry):
+	thehtml="""
+	<html><form method="post">
+	<p>fname: <input type="text" name="fname">
+	<p>lname: <input type="text" name="lname">
+	<p><input type="submit" value="Submit"></form>
+	</html>
+	"""
+
 	urls = [
                 ("/", "index"),
                 ("/hello/(.*)","hello"), 
@@ -97,7 +116,9 @@ class application(Raspberry):
 		("/tmpl/(.*)","tmpl"), 
 		("/tmpl2/(.*)","tmpl2"),
 		("/storage/(.*)","storage"),
-		("/storage2/(.*)","storage2")
+		("/storage2/(.*)","storage2"),
+		("/mypost/","mypost"),
+		("/mypost2/","mypost2")
 	]
 
 	def GET_index(self):
@@ -123,6 +144,27 @@ class application(Raspberry):
 		f=self.webinput('id')
 		print f
 		return "hello %s" % f 
+	def GET_mypost(self):
+		return self.thehtml 
+	def POST_mypost(self): # error if GET does not exist first 
+		try:
+			rbodysize=int(self.environ.get('CONTENT_LENGTH',0))
+		except (ValueError):
+			rbodysize=0
+		request_body=self.environ['wsgi.input'].read(rbodysize)
+		d=parse_qs(request_body)
+ 		print d
+		return "strange"
+	def GET_mypost2(self):
+		return self.thehtml
+	def POST_mypost2(self):
+		res=self.webpost()
+		print res
+		firstname=self.webformat(res,'fname')
+		lastname=self.webformat(res,'lname')
+		print firstname
+		print lastname
+		return "interesting"
 
 if __name__ == '__main__':
 	from wsgiref import simple_server

@@ -19,7 +19,7 @@ Contains tutorial, installation, tips for usage
 
 Things to do:
 
-1. URL arg function 
+1. URL arg function (complete!) 
 2. forms function
 3. database function
 4. improve template features
