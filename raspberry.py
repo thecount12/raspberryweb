@@ -7,29 +7,29 @@ e = Environment(loader=FileSystemLoader('/home/knoppix/raspberryweb/templates'))
 from cgi import parse_qs,escape
 
 class Raspberry:
-    """raspberry web framwork.
-    example:
+	"""raspberry web framwork.
+    	example:
 	class application(Raspberry):
-            urls = [
-                ("/", "index"),
-                ("/hello/(.*)","hello"),
-		("/jinja/(.*)","jinja"),
-		("/tmpl/(.*)","tmpl"), 
-		("/tmpl2/(.*)","tmpl2")
-            ]
-            def GET_index(self):
-                return "Main Page" 
-	    def GET_hello(self, name):
-                return "Hello, %s!" % name
-	    def GET_jinja(self,name):
-		return str(template.render(name="John Doe")) 
-	    def GET_tmpl(self,name):
-		Rtemplate=e.get_template('mytemplate.html")
-		return str(Rtemplate.render())
-	    def GET_tmpl2(self,name):
-		Rtemplate=e.get_template('mytemp2.html')
-		dict={'name':'will','last':'gunn'} #{{dict}} in template
-		return str(Rtemplate.render(dict=dict)) 
+            	urls = [
+        ("/", "index"),
+        ("/hello/(.*)","hello"),
+	("/jinja/(.*)","jinja"),
+	("/tmpl/(.*)","tmpl"), 
+	("/tmpl2/(.*)","tmpl2")
+        ]
+		def GET_index(self):
+                	return "Main Page" 
+	    	def GET_hello(self, name):
+                	return "Hello, %s!" % name
+	    	def GET_jinja(self,name):
+			return str(template.render(name="John Doe")) 
+	    	def GET_tmpl(self,name):
+			Rtemplate=e.get_template('mytemplate.html")
+			return str(Rtemplate.render())
+	    	def GET_tmpl2(self,name):
+			Rtemplate=e.get_template('mytemp2.html')
+			dict={'name':'will','last':'gunn'} #{{dict}} in template
+			return str(Rtemplate.render(dict=dict)) 
 	    
 template/
 
@@ -42,47 +42,52 @@ mytemp2.html
 
 
 
-    """
+	"""
         
-    def __init__(self, environ, start_response):
-        self.environ = environ
-        self.start = start_response
-        self.status = "200 OK"
-        self._headers = []
+	def __init__(self, environ, start_response):
+		self.environ = environ
+		self.start = start_response
+		self.status = "200 OK"
+		self._headers = []
             
-    def header(self, name, value):
-        self._headers.append((name, value))
+	def header(self, name, value):
+		self._headers.append((name, value))
             
-    def __iter__(self):
-        try:
-            x = self.delegate()
-            self.start(self.status, self._headers)
-        except:
-            headers = [("Content-Type", "text/plain")]
-            self.start("500 Internal Error", headers)
-            x = "Internal Error:\n\n" + traceback.format_exc()
+	def __iter__(self):
+	        try:
+			x = self.delegate()
+            		self.start(self.status, self._headers)
+        	except:
+			headers = [("Content-Type", "text/plain")]
+			self.start("500 Internal Error", headers)
+			x = "Internal Error:\n\n" + traceback.format_exc()
             
-        # return value can be a string or a list. we should be able to 
-        # return an iter in both the cases.
-        if isinstance(x, str):
-            return iter([x])
-        else:
-            return iter(x)
+		# return value can be a string or a list. we should be able to 
+		# return an iter in both the cases.
+		if isinstance(x, str):
+			return iter([x])
+		else:
+			return iter(x)
 
-    def delegate(self):
-        path = self.environ['PATH_INFO']
-        method = self.environ['REQUEST_METHOD']
+	def delegate(self):
+		path = self.environ['PATH_INFO']
+		method = self.environ['REQUEST_METHOD']
             
-        for pattern, name in self.urls:
-            m = re.match('^' + pattern + '$', path)
-            if m:
-                # pass the matched groups as arguments to the function
-                args = m.groups() 
-                funcname = method.upper() + "_" + name
-                func = getattr(self, funcname)
-                return func(*args)
+		for pattern, name in self.urls:
+			m = re.match('^' + pattern + '$', path)
+			if m:
+				# pass the matched groups as args 
+				args = m.groups() 
+				funcname = method.upper() + "_" + name
+				func = getattr(self, funcname)
+				return func(*args)
                     
-        return self.notfound()
+		return self.notfound()
+
+	def webinput(self,key):
+		data=parse_qs(self.environ['QUERY_STRING'])
+		item=data.get(key,[''])[0]  # (key,[]) return list same key	
+		return item	
 
 class application(Raspberry):
 	urls = [
@@ -91,7 +96,8 @@ class application(Raspberry):
 		("/jinja/(.*)","jinja"), 
 		("/tmpl/(.*)","tmpl"), 
 		("/tmpl2/(.*)","tmpl2"),
-		("/storage/(.*)","storage")
+		("/storage/(.*)","storage"),
+		("/storage2/(.*)","storage2")
 	]
 
 	def GET_index(self):
@@ -113,7 +119,10 @@ class application(Raspberry):
 		print "asdf: %s" % d.get('id',[''])[0] 
 		print "fort: %s" % d.get('foo',[''])[0] 
 		return "Storage, %s" % name 
-
+	def GET_storage2(self,name):
+		f=self.webinput('id')
+		print f
+		return "hello %s" % f 
 
 if __name__ == '__main__':
 	from wsgiref import simple_server
