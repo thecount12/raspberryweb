@@ -2,8 +2,9 @@ import re
 import traceback
 from jinja2 import Template 
 from jinja2 import Environment, FileSystemLoader, PackageLoader
-e = Environment(loader=FileSystemLoader('/root/portal/templates')) 
-template=Template('Hello {{ name}}!')
+e = Environment(loader=FileSystemLoader('/home/knoppix/raspberryweb/templates')) 
+#template=Template('Hello {{ name}}!')
+from cgi import parse_qs,escape
 
 class Raspberry:
     """raspberry web framwork.
@@ -29,8 +30,7 @@ class Raspberry:
 		Rtemplate=e.get_template('mytemp2.html')
 		dict={'name':'will','last':'gunn'} #{{dict}} in template
 		return str(Rtemplate.render(dict=dict)) 
-
-
+	    
 template/
 
 mytemp2.html
@@ -85,33 +85,39 @@ mytemp2.html
         return self.notfound()
 
 class application(Raspberry):
-            urls = [
+	urls = [
                 ("/", "index"),
                 ("/hello/(.*)","hello"), 
 		("/jinja/(.*)","jinja"), 
 		("/tmpl/(.*)","tmpl"), 
-		("/tmpl2/(.*)","tmpl2")
-            ]
+		("/tmpl2/(.*)","tmpl2"),
+		("/storage/(.*)","storage")
+	]
 
-            def GET_index(self):
-                return "Main Page" 
-	    def GET_hello(self, name):
+	def GET_index(self):
+		return "Main Page" 
+	def GET_hello(self, name):
                 return "Hello, %s!" % name
-	    def GET_jinja(self,name):
+	def GET_jinja(self,name):
 		return str(template.render(name="John Doe"))
-	    def GET_tmpl(self,name):
+	def GET_tmpl(self,name):
 		Rtemplate=e.get_template('mytemplate.html')
 		return str(Rtemplate.render())
-	    def GET_tmpl2(self,name):
+	def GET_tmpl2(self,name):
 		Rtemplate=e.get_template('mytemp2.html')
 		dict={'name':'will','last':'gunn'} #{{dict}} in template
 		return str(Rtemplate.render(dict=dict)) 
-
+	def GET_storage(self,name):
+		d=parse_qs(self.environ['QUERY_STRING'])
+		print d
+		print "asdf: %s" % d.get('id',[''])[0] 
+		print "fort: %s" % d.get('foo',[''])[0] 
+		return "Storage, %s" % name 
 
 
 if __name__ == '__main__':
 	from wsgiref import simple_server
-	httpd = simple_server.make_server('127.0.0.1', 8080, application)
+	httpd = simple_server.make_server('192.168.1.126', 8080, application)
 	try:
 		httpd.serve_forever()
 	except KeyboardInterrupt:
